@@ -48,7 +48,6 @@ function read_meta_data() {
   default_val=${key_mapped[2]:-}
 
   eval "env=\"\${$mapped_key+\$$mapped_key}\""
-  echo "Environment: $env" >&2;
   if [[ ! -z "$env" ]]; then return; fi
 
   value=$(buildkite-agent meta-data get "$meta_data_key" --default "$default_val")
