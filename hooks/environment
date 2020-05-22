@@ -39,19 +39,32 @@ function read_meta_data() {
   local meta_data_key
   local meta_data_key_alias
   local mapped_key
+# Possible cases
+# key_item="META;"
+# key_item="META"
+# key_item="meta=META"
+# key_item="meta=META;"
+# key_item="meta=META;data"
+# key_item="META;data"
 
-  IFS='=;' read -ra key_mapped <<< "$key_item"
-
-  meta_data_key=${key_mapped[0]:-}
-  meta_data_key_alias=${key_mapped[1]:-}
-  mapped_key=${meta_data_key_alias:-$meta_data_key}
-  default_val=${key_mapped[2]:-}
+  command="$(echo "$key_item" | sed -n "s/^\([^=]*\)=\(.*\)/meta_data_key=\"\1\" env_def=\"\2\"/p;")"
+  if [[ -z "$command" ]]; then
+    meta_data_key="$(echo "$key_item" | sed -n "s/^\([^;]*\);.*/\1/p")"
+    default_val="$(echo "$key_item" | sed -n "s/^[^;]*;\(.*$\)/\1/p")"
+    meta_data_key="${meta_data_key:-$key_item}"
+    mapped_key="$meta_data_key"
+  else
+    eval "$command"
+    command="$(echo "$env_def" | sed -n "s/^\([^;]*\);\(.*\)/mapped_key=\"\1\" default_val=\"\2\"/p")"
+    if [[ -z "$command" ]]; then default_val=""; else eval "$command"; fi
+    mapped_key="${mapped_key:-$env_def}"
+  fi
 
   eval "env=\"\${$mapped_key+\$$mapped_key}\""
-  if [[ ! -z "$env" ]]; then return; fi
+  if [[ ! -z "$env" ]]; then return; fi # Environment variable exists, do not override
 
   value=$(buildkite-agent meta-data get "$meta_data_key" --default "$default_val")
-  if [[ -z "$value" && "$key_mapped" != *\;* ]]; then 
+  if [[ -z "$value" && "$key_item" != *\;* ]]; then 
     echo "Could not read meta-data: ${meta_data_key} and no default value supplied" >&2;
     exit 1
   fi
