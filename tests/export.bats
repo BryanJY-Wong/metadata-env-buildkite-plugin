@@ -31,3 +31,4 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "FOO_ENV=(5 chars)"
   assert_output --partial "BAR=(6 chars)"
 }
+

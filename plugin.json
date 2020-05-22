@@ -1,7 +1,7 @@
 {
   "name": "metadata-env",
   "description": "Read metadata values and place into environment",
-  "author": "@ACloudGuru",
+  "author": "@BryanJY-Wong",
   "public": true,
   "requirements": []
 }

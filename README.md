@@ -6,6 +6,7 @@ This is particularly useful as **block step** values are saved in a build's **me
 
 https://buildkite.com/docs/pipelines/block-step
 
+If the environment variable already exist, the meta-data value _will not_ override it.
 
 ## Example
 
@@ -32,5 +33,10 @@ steps:
       ACloudGuru/metadata-env:
         keys:
           - ROLE
-          - node-env=NODE_ENV #remaps node-env key to NODE_ENV <key>=<alias>
+          - node-env=NODE_ENV;value #remaps node-env key to NODE_ENV <key>=<alias>
+          # if node-env does not exist, NODE_ENV is set to "value"
+          - data-key=DATA
+          # if data-key does not exist, error thrown
+          - blank-key=BLANK;
+          # if blank-key does not exist, BLANK set to ""
 ```
