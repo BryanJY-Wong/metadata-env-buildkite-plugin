@@ -32,3 +32,30 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "BAR=(6 chars)"
 }
 
+@test "Env and meta-data and default values are assigned" {
+  source $PWD/hooks/environment
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "META;")"
+  assert_success
+  assert_output "meta_data_key=\"META\" mapped_key=\"META\" default_val=\"\""
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "META")"
+  assert_success
+  assert_output "meta_data_key=\"META\" mapped_key=\"META\" default_val=\"\""
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "meta=META")"
+  assert_success
+  assert_output "meta_data_key=\"meta\" mapped_key=\"META\" default_val=\"\""
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "meta=META;")"
+  assert_success
+  assert_output "meta_data_key=\"meta\" mapped_key=\"META\" default_val=\"\""
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "meta=META;data")"
+  assert_success
+  assert_output "meta_data_key=\"meta\" mapped_key=\"META\" default_val=\"data\""
+
+  run source $PWD/hooks/environment; eval "$(split_key_item "META;data")"
+  assert_success
+  assert_output "meta_data_key=\"META\" mapped_key=\"META\" default_val=\"data\""
+}
