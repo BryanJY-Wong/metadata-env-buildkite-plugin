@@ -32,21 +32,19 @@ function split_key_item() {
   local meta_data_key
   local mapped_key
   local default_val
-  local command="$(echo "$key_item" | sed -n "s/^\([^=]*\)=\(.*\)/meta_data_key=\"\1\" env_def=\"\2\"/p;")"
-  if [[ -z "$command" ]]; then
-    meta_data_key="$(echo "$key_item" | sed -n "s/^\([^;]*\);.*/\1/p")"
-    default_val="$(echo "$key_item" | sed -n "s/^[^;]*;\(.*$\)/\1/p")"
-    meta_data_key="${meta_data_key:-$key_item}"
-    mapped_key="$meta_data_key"
+
+  meta_data_key="${item%%;*}" #remove everything after the first semicolon
+  meta_data_key=" ${meta_data_key%%=*}" #remove everything after the first equal
+
+  mapped_key="${item%%;*}" 
+  mapped_key="${env#*=}" #remove everything before the first equal
+
+  if [[ "$key_item" == *\;* ]]; then
+    default_val="${item#*;}" #remove everything up to first semicolon
   else
-    eval "$command"
-    command="$(echo "$env_def" | sed -n "s/^\([^;]*\);\(.*\)/mapped_key=\"\1\" default_val=\"\2\"/p")"
-    if [[ -z "$command" ]]; then default_val=""; else eval "$command"; fi
-    mapped_key="${mapped_key:-$env_def}"
+    default_val=""
   fi
-  default_val="${default_val%%[#]*}"
-  default_val="${default_val#"${default_val%%[![:space:]]*}"}"
-  default_val="${default_val%"${default_val##*[![:space:]]}"}"
+
   echo "meta_data_key=\"$meta_data_key\" mapped_key=\"$mapped_key\" default_val=\"$default_val\""
 }
 
