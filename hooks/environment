@@ -27,12 +27,6 @@ function plugin_read_list() {
   fi
 }
 
-function evaluate_key_item() {
-  while IFS=$'\n' read -r key_item ; do
-    read_meta_data "$key_item"
-  done
-}
-
 function split_key_item() {
   local key_item="$1"
   local meta_data_key
@@ -50,7 +44,16 @@ function split_key_item() {
     if [[ -z "$command" ]]; then default_val=""; else eval "$command"; fi
     mapped_key="${mapped_key:-$env_def}"
   fi
+  default_val="${default_val%%[#]*}"
+  default_val="${default_val#"${default_val%%[![:space:]]*}"}"
+  default_val="${default_val%"${default_val##*[![:space:]]}"}"
   echo "meta_data_key=\"$meta_data_key\" mapped_key=\"$mapped_key\" default_val=\"$default_val\""
+}
+
+function evaluate_key_item() {
+  while IFS=$'\n' read -r key_item ; do
+    read_meta_data "$key_item"
+  done
 }
 
 function read_meta_data() {
@@ -71,7 +74,7 @@ function read_meta_data() {
     exit 1
   fi
 
-  echo "${mapped_key}=(${#value} chars)" >&2;
+  echo "${mapped_key}=${value}" >&2;
   echo "${mapped_key}=\"${value}\""
 }
 
