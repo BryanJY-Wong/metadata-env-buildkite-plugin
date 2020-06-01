@@ -47,8 +47,8 @@ function read_meta_data() {
   meta_data_key_alias=${key_mapped[1]:-}
   mapped_key=${meta_data_key_alias:-$meta_data_key}
 
-  eval "default_val=\"\${$mapped_key+\$$mapped_key}\""
-  value=$(buildkite-agent meta-data get "$meta_data_key" --default "${default_val:-}")
+  eval "default_val=\"\${$mapped_key:-}\""
+  value=$(buildkite-agent meta-data get "$meta_data_key" --default "${default_val}")
 
   echo "${mapped_key}=${value}" >&2;
   echo "${mapped_key}=${value}"
