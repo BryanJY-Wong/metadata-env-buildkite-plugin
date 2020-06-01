@@ -27,27 +27,6 @@ function plugin_read_list() {
   fi
 }
 
-function split_key_item() {
-  local key_item="$1"
-  local meta_data_key
-  local mapped_key
-  local default_val
-
-  meta_data_key="${item%%;*}" #remove everything after the first semicolon
-  meta_data_key=" ${meta_data_key%%=*}" #remove everything after the first equal
-
-  mapped_key="${item%%;*}" 
-  mapped_key="${env#*=}" #remove everything before the first equal
-
-  if [[ "$key_item" == *\;* ]]; then
-    default_val="${item#*;}" #remove everything up to first semicolon
-  else
-    default_val=""
-  fi
-
-  echo "meta_data_key=\"$meta_data_key\" mapped_key=\"$mapped_key\" default_val=\"$default_val\""
-}
-
 function evaluate_key_item() {
   while IFS=$'\n' read -r key_item ; do
     read_meta_data "$key_item"
@@ -56,24 +35,23 @@ function evaluate_key_item() {
 
 function read_meta_data() {
   local key_item="$1"
-  local meta_data_key
-  local mapped_key
-  local default_val
   local value
+  local meta_data_key
+  local meta_data_key_alias
+  local mapped_key
+  local default_val=""
 
-  eval "$(split_key_item "$key_item")"
+  IFS='=' read -ra key_mapped <<< "$key_item"
 
-  eval "env=\"\${$mapped_key+\$$mapped_key}\""
-  if [[ ! -z "$env" ]]; then return; fi # Environment variable exists, do not override
+  meta_data_key=${key_mapped[0]:-}
+  meta_data_key_alias=${key_mapped[1]:-}
+  mapped_key=${meta_data_key_alias:-$meta_data_key}
 
-  value=$(buildkite-agent meta-data get "$meta_data_key" --default "$default_val")
-  if [[ -z "$value" && "$key_item" != *\;* ]]; then 
-    echo "Could not read meta-data: ${meta_data_key} and no default value supplied" >&2;
-    exit 1
-  fi
+  eval "default_val=\"\${$mapped_key+\$$mapped_key}\""
+  value=$(buildkite-agent meta-data get "$meta_data_key" --default "${default_val:-}")
 
   echo "${mapped_key}=${value}" >&2;
-  echo "${mapped_key}=\"${value}\""
+  echo "${mapped_key}=${value}"
 }
 
 main
